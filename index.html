@@ -146,7 +146,7 @@
                         <div id="card-info-content" class="px-4 pb-4 hidden border-b border-gray-200">
                             <div class="flex items-center space-x-4">
                                 <!-- User Photo: Replaced placeholder with the uploaded image URL -->
-                                <img src="uploaded:profile.png-9c4355ad-ba60-4b99-aea2-658cbd631467" alt="User Photo" class="w-16 h-16 rounded-full object-cover border-2 border-green-300 shadow-md">
+                                <img src=" " alt="User Photo" class="w-16 h-16 rounded-full object-cover border-2 border-green-300 shadow-md">
                                 <div>
                                     <p class="text-base font-semibold text-gray-900">FAUZAN EJAZ</p>
                                     <p class="text-xs text-gray-600">JEF-NW9T242222G</p>
@@ -305,62 +305,93 @@
         </nav>
     </div>
 
-    <script>
-        // QR Code Data from the last image provided
-        const qrData = "STUDRC\nTIC\n2025-09-16T23:27\n2026-07-31T23:59\nXNJFXZDHE9\n37\n2\n0\n021a340f1cbbb1d03089175ccae61b0e9ff\n5de1c4bdab4998f15bdb245";
+   <script>
+    // Base QR Code Data (without timestamp)
+    const baseQrData = `STUDRC
+TIC
+2025-09-16T23:27
+2026-07-31T23:59
+XNJFXZDHE9
+37
+2
+0
+021a340f1cbbb1d03089175ccae61b0e9ff
+5de1c4bdab4998f15bdb245`;
 
-        let qrcodeInstance = null;
-        let qrUpdateInterval = null;
+    let qrcodeInstance = null;
+    let qrUpdateInterval = null;
 
-        // --- Page Navigation Functions ---
-        function showMyTickets() {
-            document.getElementById('my-tickets-page').classList.remove('hidden');
-            document.getElementById('active-ticket-page').classList.add('hidden');
-            if (qrUpdateInterval) {
-                clearInterval(qrUpdateInterval);
-            }
+    // --- Page Navigation Functions ---
+    function showMyTickets() {
+        document.getElementById('my-tickets-page').classList.remove('hidden');
+        document.getElementById('active-ticket-page').classList.add('hidden');
+        if (qrUpdateInterval) {
+            clearInterval(qrUpdateInterval);
         }
+    }
 
-        function showActiveTicket() {
-            document.getElementById('my-tickets-page').classList.add('hidden');
-            document.getElementById('active-ticket-page').classList.remove('hidden');
-            generateQrCode();
-            // Set the QR code to update every 15 minutes (15 * 60 * 1000 ms)
-            qrUpdateInterval = setInterval(generateQrCode, 15 * 60 * 1000); 
-            // Ensure the QR section is initially open
-            openQrSection();
-        }
+    function showActiveTicket() {
+        document.getElementById('my-tickets-page').classList.add('hidden');
+        document.getElementById('active-ticket-page').classList.remove('hidden');
+        generateQrCode();
+        // Refresh QR code every 15 minutes
+        qrUpdateInterval = setInterval(generateQrCode, 15 * 60 * 1000);
+        openQrSection();
+    }
 
-        // --- QR Code & Time Functions ---
-        function generateQrCode() {
-            const qrcodeElement = document.getElementById("qrcode");
-            
-            // Clear existing QR code content before generating a new one
-            qrcodeElement.innerHTML = ''; 
+    // --- QR Code & Time Functions ---
+    function generateQrCode() {
+        const qrcodeElement = document.getElementById("qrcode");
+        qrcodeElement.innerHTML = ''; // Clear previous QR
 
-            // Initialize or re-initialize for the first time
-            qrcodeInstance = new QRCode(qrcodeElement, {
-                text: qrData,
-                width: 180,
-                height: 180,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-            
-            updateTime();
-        }
+        // Get current local time with timezone offset
+        const now = new Date();
+        const tzOffsetMin = now.getTimezoneOffset(); // in minutes
+        const offsetSign = tzOffsetMin > 0 ? "-" : "+";
+        const absOffsetMin = Math.abs(tzOffsetMin);
+        const offsetHours = String(Math.floor(absOffsetMin / 60)).padStart(2, "0");
+        const offsetMinutes = String(absOffsetMin % 60).padStart(2, "0");
+        const offsetStr = `${offsetSign}${offsetHours}:${offsetMinutes}`;
 
-        function updateTime() {
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-        // Run updateTime immediately and then every second
-        updateTime(); 
-        setInterval(updateTime, 1000);
+        const isoTimestamp =
+            now.getFullYear() +
+            "-" + String(now.getMonth() + 1).padStart(2, "0") +
+            "-" + String(now.getDate()).padStart(2, "0") +
+            "T" + String(now.getHours()).padStart(2, "0") +
+            ":" + String(now.getMinutes()).padStart(2, "0") +
+            ":" + String(now.getSeconds()).padStart(2, "0") +
+            offsetStr;
+
+        // Merge base data with timestamp
+        const qrData = `${baseQrData}
+${isoTimestamp}`;
+
+        // Generate QR Code
+        qrcodeInstance = new QRCode(qrcodeElement, {
+            text: qrData,
+            width: 180,
+            height: 180,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        updateTime();
+    }
+
+    function updateTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // Run updateTime immediately and then every second
+    updateTime();
+    setInterval(updateTime, 1000);
+
+
 
         // --- Collapsible Handlers ---
         
@@ -414,5 +445,6 @@
     </script>
 </body>
 </html>
+
 
 
